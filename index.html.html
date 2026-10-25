@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="hu" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kronobiológia & Bioritmus Kalkulátor</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        physical: '#ef4444',
+                        emotional: '#3b82f6',
+                        intellectual: '#10b981',
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-darkbg text-slate-100 min-h-screen pb-12 flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-indigo-600/20 text-indigo-400 rounded-xl border border-indigo-500/30">
+                    <i class="fa-solid fa-wave-square text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                        Kronobiológiai & Bioritmus Kalkulátor
+                    </h1>
+                    <p class="text-xs text-slate-400">Interaktív ciklus elemző & grafikon</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="setQuickDate(0)" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition border border-slate-700">
+                    <i class="fa-solid fa-calendar-day mr-1"></i> Mai nap
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 flex-grow w-full space-y-8">
+
+        <!-- Input & Controls Section -->
+        <section class="bg-cardbg rounded-2xl p-6 border border-slate-800 shadow-xl">
+            <h2 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-indigo-400"></i> Beállítások & Adatmegadás
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Birthdate Input -->
+                <div>
+                    <label for="birthDate" class="block text-xs font-medium text-slate-400 mb-1">Születési dátum</label>
+                    <div class="relative">
+                        <input type="date" id="birthDate" value="1995-05-15" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-white transition">
+                    </div>
+                </div>
+
+                <!-- Target Date Input -->
+                <div>
+                    <label for="targetDate" class="block text-xs font-medium text-slate-400 mb-1">Kezdő / Céldátum</label>
+                    <div class="relative">
+                        <input type="date" id="targetDate" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-white transition">
+                    </div>
+                </div>
+
+                <!-- Date Range Select -->
+                <div>
+                    <label for="rangeDays" class="block text-xs font-medium text-slate-400 mb-1">Időtartam (Grafikon & Táblázat)</label>
+                    <select id="rangeDays" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-white transition">
+                        <option value="15">15 nap</option>
+                        <option value="30" selected>30 nap (Hónap)</option>
+                        <option value="60">60 nap</option>
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-end gap-2">
+                    <button onclick="calculateBiorhythm()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-calculator"></i> Újraszámolás
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Summary Status Cards for Target Day -->
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Age Card -->
+            <div class="bg-cardbg rounded-2xl p-5 border border-slate-800 shadow-md flex flex-col justify-between">
+                <div>
+                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Kora a céldátumon</span>
+                    <h3 id="cardDaysLived" class="text-2xl font-bold text-white mt-1">0 nap</h3>
+                </div>
+                <p id="cardAgeYears" class="text-xs text-slate-400 mt-2">0 év, 0 nap</p>
+            </div>
+
+            <!-- Physical Cycle -->
+            <div class="bg-cardbg rounded-2xl p-5 border border-slate-800 shadow-md relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-2 h-full bg-physical"></div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Fizikai ciklus (23 nap)</span>
+                    <i class="fa-solid fa-bolt text-physical text-lg"></i>
+                </div>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <h3 id="cardPhysicalVal" class="text-2xl font-bold text-white">0%</h3>
+                    <span id="cardPhysicalPhase" class="text-xs font-semibold px-2 py-0.5 rounded">...</span>
+                </div>
+                <!-- Progress bar -->
+                <div class="w-full bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
+                    <div id="cardPhysicalBar" class="bg-physical h-full transition-all duration-500" style="width: 50%"></div>
+                </div>
+            </div>
+
+            <!-- Emotional Cycle -->
+            <div class="bg-cardbg rounded-2xl p-5 border border-slate-800 shadow-md relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-2 h-full bg-emotional"></div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Érzelmi ciklus (28 nap)</span>
+                    <i class="fa-solid fa-heart text-emotional text-lg"></i>
+                </div>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <h3 id="cardEmotionalVal" class="text-2xl font-bold text-white">0%</h3>
+                    <span id="cardEmotionalPhase" class="text-xs font-semibold px-2 py-0.5 rounded">...</span>
+                </div>
+                <!-- Progress bar -->
+                <div class="w-full bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
+                    <div id="cardEmotionalBar" class="bg-emotional h-full transition-all duration-500" style="width: 50%"></div>
+                </div>
+            </div>
+
+            <!-- Intellectual Cycle -->
+            <div class="bg-cardbg rounded-2xl p-5 border border-slate-800 shadow-md relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-2 h-full bg-intellectual"></div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Szellemi ciklus (33 nap)</span>
+                    <i class="fa-solid fa-brain text-intellectual text-lg"></i>
+                </div>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <h3 id="cardIntellectualVal" class="text-2xl font-bold text-white">0%</h3>
+                    <span id="cardIntellectualPhase" class="text-xs font-semibold px-2 py-0.5 rounded">...</span>
+                </div>
+                <!-- Progress bar -->
+                <div class="w-full bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
+                    <div id="cardIntellectualBar" class="bg-intellectual h-full transition-all duration-500" style="width: 50%"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Chart Section -->
+        <section class="bg-cardbg rounded-2xl p-6 border border-slate-800 shadow-xl">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                        <i class="fa-chart-line text-indigo-400"></i> Bioritmus Hullámok Görbéje
+                    </h2>
+                    <p class="text-xs text-slate-400">A kiválasztott időintervallum folyamatos szinuszos bioritmusai</p>
+                </div>
+                <!-- Legend -->
+                <div class="flex flex-wrap items-center gap-4 text-xs font-medium">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-physical inline-block"></span> Fizikai (23d)</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emotional inline-block"></span> Érzelmi (28d)</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-intellectual inline-block"></span> Szellemi (33d)</span>
+                </div>
+            </div>
+            
+            <div class="relative w-full h-[320px] sm:h-[400px]">
+                <canvas id="biorhythmChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Detailed Breakdown Table Section -->
+        <section class="bg-cardbg rounded-2xl p-6 border border-slate-800 shadow-xl">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-table text-indigo-400"></i> Részletes Napi Lebontás
+                    </h2>
+                    <p class="text-xs text-slate-400">Napi százalékos értékek, fázisok és javaslatok</p>
+                </div>
+                
+                <!-- Export Buttons -->
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button onclick="exportToCSV()" class="flex-1 sm:flex-initial px-3.5 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-csv"></i> CSV Letöltés
+                    </button>
+                    <button onclick="exportToHTML()" class="flex-1 sm:flex-initial px-3.5 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-code"></i> HTML Letöltés
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto rounded-xl border border-slate-800">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-slate-900/80 text-slate-400 text-xs uppercase font-semibold border-b border-slate-800">
+                            <th class="p-3.5">Dátum</th>
+                            <th class="p-3.5">Nap</th>
+                            <th class="p-3.5 text-center">Fizikai (23d)</th>
+                            <th class="p-3.5 text-center">Érzelmi (28d)</th>
+                            <th class="p-3.5 text-center">Szellemi (33d)</th>
+                            <th class="p-3.5">Állapot / Javaslat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="biorhythmTableBody" class="divide-y divide-slate-800/60 text-slate-300">
+                        <!-- Dynamic content -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Information & Legend Explanation -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-cardbg rounded-2xl p-5 border border-slate-800">
+                <h3 class="font-semibold text-physical flex items-center gap-2 mb-2">
+                    <i class="fa-solid fa-bolt"></i> Fizikai Ciklus (23 nap)
+                </h3>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Meghatározza a fizikai energiát, az állóképességet, az erőt, a koordinációt és az ellenállóképességet. Pozitív fázisban ideális edzésekhez és nehéz fizikai munkához.
+                </p>
+            </div>
+            <div class="bg-cardbg rounded-2xl p-5 border border-slate-800">
+                <h3 class="font-semibold text-emotional flex items-center gap-2 mb-2">
+                    <i class="fa-solid fa-heart"></i> Érzelmi Ciklus (28 nap)
+                </h3>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Befolyásolja a hangulatot, az érzelmi stabilitást, az empátiát és a kreativitást. Pozitív fázisban könnyebb a társas érintkezés, negatív fázisban türelmetlenség léphet fel.
+                </p>
+            </div>
+            <div class="bg-cardbg rounded-2xl p-5 border border-slate-800">
+                <h3 class="font-semibold text-intellectual flex items-center gap-2 mb-2">
+                    <i class="fa-solid fa-brain"></i> Szellemi Ciklus (33 nap)
+                </h3>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    A logikus gondolkodást, a memória hatékonyságát, a koncentrációt és a tanulási képességet szabályozza. A magas fázis ideális stratégiai döntésekre és tanulásra.
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-12 text-center text-xs text-slate-500 py-4">
+        Kronobiológia & Bioritmus Kalkulátor &bull; Automatikus Szinusz-alapú Ciklusanalízis
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        let chartInstance = null;
+        let calculatedDataCache = [];
+
+        // Hungarian Day Names
+        const dayNamesHU = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat'];
+
+        window.onload = function() {
+            // Set initial target date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('targetDate').value = today;
+
+            // Trigger initial calculation
+            calculateBiorhythm();
+
+            // Event Listeners for Live Updates
+            document.getElementById('birthDate').addEventListener('change', calculateBiorhythm);
+            document.getElementById('targetDate').addEventListener('change', calculateBiorhythm);
+            document.getElementById('rangeDays').addEventListener('change', calculateBiorhythm);
+        };
+
+        function setQuickDate(offsetDays) {
+            const target = new Date();
+            target.setDate(target.getDate() + offsetDays);
+            document.getElementById('targetDate').value = target.toISOString().split('T')[0];
+            calculateBiorhythm();
+        }
+
+        // Calculate Days Difference accurately
+        function getDaysDiff(birthDate, targetDate) {
+            const b = new Date(birthDate);
+            const t = new Date(targetDate);
+            // Reset hours to avoid timezone shift inaccuracies
+            b.setHours(0,0,0,0);
+            t.setHours(0,0,0,0);
+            const diffTime = t.getTime() - b.getTime();
+            return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        // Calculate Biorhythm value (-100 to +100)
+        function getBiorhythmVal(daysLived, cyclePeriod) {
+            return Math.sin((2 * Math.PI * daysLived) / cyclePeriod) * 100;
+        }
+
+        // Format Phase Text
+        function getPhaseInfo(val) {
+            if (Math.abs(val) <= 10) {
+                return { text: 'Kritikus nap', bg: 'bg-amber-500/20', color: 'text-amber-400', border: 'border-amber-500/30' };
+            } else if (val > 10) {
+                return { text: 'Magas fázis', bg: 'bg-emerald-500/20', color: 'text-emerald-400', border: 'border-emerald-500/30' };
+            } else {
+                return { text: 'Regenerációs fázis', bg: 'bg-slate-700/50', color: 'text-slate-400', border: 'border-slate-600/30' };
+            }
+        }
+
+        // Status / Tip Generator
+        function getOverallStatusTip(p, e, i) {
+            const criticals = [];
+            if (Math.abs(p) <= 10) criticals.push('Fizikai');
+            if (Math.abs(e) <= 10) criticals.push('Érzelmi');
+            if (Math.abs(i) <= 10) criticals.push('Szellemi');
+
+            if (criticals.length >= 2) {
+                return `<span class="text-red-400 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Dupla kritikus nap (${criticals.join(', ')}) - Bánj óvatosan az energiáddal!</span>`;
+            }
+            if (criticals.length === 1) {
+                return `<span class="text-amber-400 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Kritikus nap: ${criticals[0]} váltófázis.</span>`;
+            }
+
+            if (p > 50 && e > 50 && i > 50) {
+                return `<span class="text-emerald-400 font-semibold"><i class="fa-solid fa-star mr-1"></i> Csúcsforma! Minden ciklus magas fázisban van.</span>`;
+            }
+            if (p < -50 && e < -50 && i < -50) {
+                return `<span class="text-blue-400 font-semibold"><i class="fa-solid fa-battery-quarter mr-1"></i> Mély pihenő fázis – szánj időt a töltekezésre.</span>`;
+            }
+
+            // General recommendations
+            if (p >= i && p >= e) return 'Fizikai aktivitáshoz, sporthoz ideális nap.';
+            if (e >= p && e >= i) return 'Jó nap társasági élethez és kreatív munkákhoz.';
+            return 'A szellemi koncentrációt igénylő feladatok kedveznek.';
+        }
+
+        function calculateBiorhythm() {
+            const birthDateVal = document.getElementById('birthDate').value;
+            const targetDateVal = document.getElementById('targetDate').value;
+            const rangeDays = parseInt(document.getElementById('rangeDays').value);
+
+            if (!birthDateVal || !targetDateVal) return;
+
+            const daysLivedTarget = getDaysDiff(birthDateVal, targetDateVal);
+
+            // Update Age Cards
+            document.getElementById('cardDaysLived').innerText = daysLivedTarget.toLocaleString('hu-HU') + ' nap';
+            const years = Math.floor(daysLivedTarget / 365.25);
+            const remDays = Math.floor(daysLivedTarget % 365.25);
+            document.getElementById('cardAgeYears').innerText = `${years} év, ${remDays} nap`;
+
+            // Calculate target day cycles
+            const pVal = getBiorhythmVal(daysLivedTarget, 23);
+            const eVal = getBiorhythmVal(daysLivedTarget, 28);
+            const iVal = getBiorhythmVal(daysLivedTarget, 33);
+
+            updateCardUI('cardPhysical', pVal);
+            updateCardUI('cardEmotional', eVal);
+            updateCardUI('cardIntellectual', iVal);
+
+            // Generate range data for table and chart
+            const labels = [];
+            const pData = [];
+            const eData = [];
+            const iData = [];
+            calculatedDataCache = [];
+
+            const startDate = new Date(targetDateVal);
+
+            const tableBody = document.getElementById('biorhythmTableBody');
+            tableBody.innerHTML = '';
+
+            for (let d = 0; d < rangeDays; d++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + d);
+                
+                const dateStr = currentDate.toISOString().split('T')[0];
+                const daysLived = getDaysDiff(birthDateVal, dateStr);
+                const dayOfWeek = dayNamesHU[currentDate.getDay()];
+
+                const p = getBiorhythmVal(daysLived, 23);
+                const e = getBiorhythmVal(daysLived, 28);
+                const i = getBiorhythmVal(daysLived, 33);
+
+                labels.push(`${currentDate.getMonth() + 1}.${currentDate.getDate()}.`);
+                pData.push(p);
+                eData.push(e);
+                iData.push(i);
+
+                const tip = getOverallStatusTip(p, e, i);
+
+                calculatedDataCache.push({
+                    date: dateStr,
+                    dayOfWeek: dayOfWeek,
+                    p: p.toFixed(1),
+                    e: e.toFixed(1),
+                    i: i.toFixed(1),
+                    tipText: tip.replace(/<[^>]*>?/gm, '') // Plain text for export
+                });
+
+                // Render Table Row
+                const isTargetDay = d === 0;
+                const row = document.createElement('tr');
+                if (isTargetDay) {
+                    row.className = "bg-indigo-950/40 font-medium border-l-4 border-l-indigo-500";
+                } else {
+                    row.className = "hover:bg-slate-800/40 transition";
+                }
+
+                row.innerHTML = `
+                    <td class="p-3.5 font-mono text-slate-200">
+                        ${dateStr} ${isTargetDay ? '<span class="ml-1 text-[10px] bg-indigo-500/30 text-indigo-300 px-1.5 py-0.5 rounded uppercase">Cél</span>' : ''}
+                    </td>
+                    <td class="p-3.5 text-slate-400 text-xs">${dayOfWeek}</td>
+                    <td class="p-3.5 text-center font-mono ${p >= 0 ? 'text-red-400' : 'text-slate-400'}">${p > 0 ? '+' : ''}${p.toFixed(0)}%</td>
+                    <td class="p-3.5 text-center font-mono ${e >= 0 ? 'text-blue-400' : 'text-slate-400'}">${e > 0 ? '+' : ''}${e.toFixed(0)}%</td>
+                    <td class="p-3.5 text-center font-mono ${i >= 0 ? 'text-emerald-400' : 'text-slate-400'}">${i > 0 ? '+' : ''}${i.toFixed(0)}%</td>
+                    <td class="p-3.5 text-xs">${tip}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+
+            // Render Chart
+            renderChart(labels, pData, eData, iData);
+        }
+
+        function updateCardUI(cardPrefix, val) {
+            const valElem = document.getElementById(cardPrefix + 'Val');
+            const phaseElem = document.getElementById(cardPrefix + 'Phase');
+            const barElem = document.getElementById(cardPrefix + 'Bar');
+
+            valElem.innerText = (val > 0 ? '+' : '') + val.toFixed(0) + '%';
+            
+            const phase = getPhaseInfo(val);
+            phaseElem.innerText = phase.text;
+            phaseElem.className = `text-xs font-semibold px-2 py-0.5 rounded border ${phase.bg} ${phase.color} ${phase.border}`;
+
+            // Map -100..+100 to 0..100% for progress bar
+            const barWidth = ((val + 100) / 2).toFixed(0);
+            barElem.style.width = barWidth + '%';
+        }
+
+        function renderChart(labels, pData, eData, iData) {
+            const ctx = document.getElementById('biorhythmChart').getContext('2d');
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Fizikai (23 nap)',
+                            data: pData,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                            borderWidth: 2.5,
+                            tension: 0.4,
+                            pointRadius: 2,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Érzelmi (28 nap)',
+                            data: eData,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                            borderWidth: 2.5,
+                            tension: 0.4,
+                            pointRadius: 2,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Szellemi (33 nap)',
+                            data: iData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                            borderWidth: 2.5,
+                            tension: 0.4,
+                            pointRadius: 2,
+                            pointHoverRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(51, 65, 85, 0.3)'
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 11 }
+                            }
+                        },
+                        y: {
+                            min: -100,
+                            max: 100,
+                            grid: {
+                                color: (context) => context.tick.value === 0 ? 'rgba(226, 232, 240, 0.4)' : 'rgba(51, 65, 85, 0.3)',
+                                lineWidth: (context) => context.tick.value === 0 ? 1.5 : 1
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: function(val) { return val + '%'; },
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false // Custom legend used in UI
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y > 0 ? '+' : ''}${context.parsed.y.toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Export Function 1: CSV Download
+        function exportToCSV() {
+            if (!calculatedDataCache || calculatedDataCache.length === 0) return;
+
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // UTF-8 BOM
+            csvContent += "Datum;Nap;Fizikai (23d) %;Erzelmi (28d) %;Szellemi (33d) %;Javaslat / Allapot\n";
+
+            calculatedDataCache.forEach(row => {
+                csvContent += `"${row.date}";"${row.dayOfWeek}";"${row.p}%";"${row.e}%";"${row.i}%";"${row.tipText}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `bioritmus_elemzes_${document.getElementById('targetDate').value}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Export Function 2: HTML Download
+        function exportToHTML() {
+            if (!calculatedDataCache || calculatedDataCache.length === 0) return;
+
+            const birth = document.getElementById('birthDate').value;
+            const target = document.getElementById('targetDate').value;
+
+            let tableRowsHtml = '';
+            calculatedDataCache.forEach(row => {
+                tableRowsHtml += `
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${row.date}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${row.dayOfWeek}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center; color: #d32f2f;">${row.p}%</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center; color: #1976d2;">${row.e}%</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center; color: #388e3c;">${row.i}%</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${row.tipText}</td>
+                    </tr>
+                `;
+            });
+
+            const htmlDocument = `
+                <!DOCTYPE html>
+                <html lang="hu">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Bioritmus Elemzés - ${target}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9fafb; color: #111827; }
+                        h1 { color: #1e3a8a; }
+                        .info { margin-bottom: 20px; font-size: 14px; color: #4b5563; }
+                        table { width: 100%; border-collapse: collapse; background: #fff; }
+                        th { background-color: #f3f4f6; padding: 10px; border: 1px solid #ddd; text-align: left; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Kronobiológiai Bioritmus Elemzés</h1>
+                    <div class="info">
+                        <p><strong>Születési dátum:</strong> ${birth}</p>
+                        <p><strong>Kezdő dátum:</strong> ${target}</p>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Dátum</th>
+                                <th>Nap</th>
+                                <th>Fizikai (23d)</th>
+                                <th>Érzelmi (28d)</th>
+                                <th>Szellemi (33d)</th>
+                                <th>Állapot / Javaslat</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRowsHtml}
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([htmlDocument], { type: 'text/html;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bioritmus_tablazat_${target}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
